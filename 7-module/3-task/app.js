@@ -31,6 +31,10 @@ app.use(async (ctx, next) => {
 app.use((ctx, next) => {
   ctx.login = async function(user) {
     const token = uuid();
+    await Session.findOneAndUpdate({user: user._id}, {lastVisit: new Date(), token: token}, {
+      new: true,
+      upsert: true,
+    });
 
     return token;
   };
@@ -56,7 +60,7 @@ router.post('/login', login);
 router.get('/oauth/:provider', oauth);
 router.post('/oauth_callback', handleMongooseValidationError, oauthCallback);
 
-router.get('/me', me);
+router.get('/me', mustBeAuthenticated, me);
 
 app.use(router.routes());
 
